@@ -1,6 +1,7 @@
 package com.github.lassulfi.grpc.greeting.client;
 
 import com.proto.dummy.DummyServiceGrpc;
+import com.proto.greet.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -15,12 +16,29 @@ public class GreetingClient {
                 .build();
 
         System.out.println("Creating stub");
-        DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
+        // old and dummy
+        // DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
 
         // DummyServiceGrpc.DummyServiceFutureStub asyncClient = DummyServiceGrpc.newFutureStub(channel);
+        // Created a greet service client (blocking - synchronous)
+        GreetServiceGrpc.GreetServiceBlockingStub greetClient = GreetServiceGrpc.newBlockingStub(channel);
+
+        // created a protocol buffer message
+        Greeting greeting = Greeting.newBuilder()
+                .setFirstName("Luis Daniel")
+                .setLastName("Assulfi")
+                .build();
+
+        // do the same for the GreetRequest
+        GreetRequest greetRequest = GreetRequest.newBuilder()
+                .setGreeting(greeting)
+                .build();
+
+        // Call the RPC and get back a GreetResponse (procotol buffers)
+        GreetResponse greetResponse = greetClient.greet(greetRequest);
+        System.out.println(greetResponse.getResult());
 
         // do something
-
         System.out.println("Shutting down channel");
         channel.shutdown();
     }

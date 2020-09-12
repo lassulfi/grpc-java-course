@@ -1,22 +1,22 @@
-package com.github.lassulfi.grpc.greeting.server;
+package com.github.lassulfi.grpc.calculator.server;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
 import java.io.IOException;
 
-public class GreetingServer {
+public class CalculatorServer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        System.out.println("Hello, gRPC!");
+        System.out.println("Starting calculator server...");
 
-        Server server = ServerBuilder.forPort(50051)
-                .addService(new GreetServiceImpl())
+        Server server = ServerBuilder.forPort(50052)
+                .addService(new SumServiceImpl())
                 .build();
         server.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Received shutdown request");
+            System.out.println("Received a shutdown request");
             server.shutdown();
             System.out.println("Successfully stopped the server");
         }));
