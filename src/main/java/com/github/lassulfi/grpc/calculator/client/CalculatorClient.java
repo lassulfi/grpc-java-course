@@ -1,9 +1,6 @@
 package com.github.lassulfi.grpc.calculator.client;
 
-import com.proto.calculator.Sum;
-import com.proto.calculator.SumRequest;
-import com.proto.calculator.SumResponse;
-import com.proto.calculator.SumServiceGrpc;
+import com.proto.calculator.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -24,6 +21,8 @@ public class CalculatorClient {
         int firstValue = 3;
         int secondValue = 10;
 
+        // Unary
+        System.out.println("Unary Request...");
         Sum sum = Sum.newBuilder()
                 .setFirstValue(firstValue)
                 .setSecondValue(secondValue)
@@ -36,6 +35,16 @@ public class CalculatorClient {
         SumResponse sumResponse = sumClient.sum(sumRequest);
         System.out.println("The result of the sum of " + firstValue + " to "
                 + secondValue + " is " + sumResponse.getResult());
+
+        // Server Streaming
+        System.out.println("Server streaming request...");
+        PrimeRequest primeRequest = PrimeRequest.newBuilder()
+                .setNumber(120)
+                .build();
+
+        sumClient.primeNumberDecomposition(primeRequest).forEachRemaining(response -> {
+            System.out.println("Prime number: " + response.getResult());
+        });
 
         System.out.println("Shutting down channel...");
         channel.shutdown();

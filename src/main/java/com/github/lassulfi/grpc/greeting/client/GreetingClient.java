@@ -23,20 +23,34 @@ public class GreetingClient {
         // Created a greet service client (blocking - synchronous)
         GreetServiceGrpc.GreetServiceBlockingStub greetClient = GreetServiceGrpc.newBlockingStub(channel);
 
+        // Unary
         // created a protocol buffer message
-        Greeting greeting = Greeting.newBuilder()
-                .setFirstName("Luis Daniel")
-                .setLastName("Assulfi")
+//        Greeting greeting = Greeting.newBuilder()
+//                .setFirstName("Luis Daniel")
+//                .setLastName("Assulfi")
+//                .build();
+//
+//        // do the same for the GreetRequest
+//        GreetRequest greetRequest = GreetRequest.newBuilder()
+//                .setGreeting(greeting)
+//                .build();
+//
+//        // Call the RPC and get back a GreetResponse (procotol buffers)
+//        GreetResponse greetResponse = greetClient.greet(greetRequest);
+//        System.out.println(greetResponse.getResult());
+
+        //Server streaming
+        GreetManyTimesRequest request = GreetManyTimesRequest.newBuilder()
+                .setGreeting(Greeting.newBuilder()
+                        .setFirstName("Luis Daniel")
+                        .setLastName("Assulfi")
+                        .build())
                 .build();
 
-        // do the same for the GreetRequest
-        GreetRequest greetRequest = GreetRequest.newBuilder()
-                .setGreeting(greeting)
-                .build();
-
-        // Call the RPC and get back a GreetResponse (procotol buffers)
-        GreetResponse greetResponse = greetClient.greet(greetRequest);
-        System.out.println(greetResponse.getResult());
+        // stream the responses in a blocking manner
+        greetClient.greetManyTimes(request).forEachRemaining(response -> {
+            System.out.println(response.getResult());
+        });
 
         // do something
         System.out.println("Shutting down channel");
