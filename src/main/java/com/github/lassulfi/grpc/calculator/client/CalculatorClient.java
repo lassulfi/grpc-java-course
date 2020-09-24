@@ -91,29 +91,16 @@ public class CalculatorClient {
             @Override
             public void onCompleted() {
                 System.out.println("Server has completed sending us something!");
+                latch.countDown();
             }
         });
 
-        System.out.println("Sending message 1");
-        requestObserver.onNext(AverageRequest.newBuilder()
-                .setNumber(1)
-                .build());
-
-        System.out.println("Sending message 2");
-        requestObserver.onNext(AverageRequest.newBuilder()
-                .setNumber(2)
-                .build());
-
-        System.out.println("Sending message 3");
-        requestObserver.onNext(AverageRequest.newBuilder()
-                .setNumber(3)
-                .build());
-
-        System.out.println("Sending message 4");
-        requestObserver.onNext(AverageRequest.newBuilder()
-                .setNumber(4)
-                .build());
-
+        for(int i = 1; i <= 10000; i++) {
+            System.out.println("Sending message " + i);
+            requestObserver.onNext(AverageRequest.newBuilder()
+                    .setNumber(i)
+                    .build());
+        }
         requestObserver.onCompleted();
 
         try {
