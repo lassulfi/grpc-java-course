@@ -47,4 +47,35 @@ public class SumServiceImpl extends SumServiceGrpc.SumServiceImplBase {
             responseObserver.onCompleted();
         }
     }
+
+    @Override
+    public StreamObserver<AverageRequest> calculateAverage(StreamObserver<AverageResponse> responseObserver) {
+        StreamObserver<AverageRequest> requestObserver = new StreamObserver<AverageRequest>() {
+            int count = 0;
+            double sum = 0;
+
+            @Override
+            public void onNext(AverageRequest request) {
+                int number = request.getNumber();
+                sum += number;
+                count++;
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+            }
+
+            @Override
+            public void onCompleted() {
+                double average = sum / count;
+                responseObserver.onNext(AverageResponse.newBuilder()
+                        .setAverage(average)
+                        .build());
+                responseObserver.onCompleted();
+            }
+        };
+
+        return requestObserver;
+    }
 }

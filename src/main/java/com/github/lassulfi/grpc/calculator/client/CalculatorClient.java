@@ -3,17 +3,35 @@ package com.github.lassulfi.grpc.calculator.client;
 import com.proto.calculator.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class CalculatorClient {
 
     public static void main(String[] args) {
         System.out.println("Starting calculator client...");
 
+        CalculatorClient main = new CalculatorClient();
+        main.run();
+    }
+
+    private void run() {
         ManagedChannel channel = ManagedChannelBuilder
                 .forAddress("localhost", 50052)
                 .usePlaintext()
                 .build();
 
+//        doUnaryCall(channel);
+//        doServerStreamingCall(channel);
+        doClientStreamingCall(channel);
+
+        System.out.println("Shutting down channel...");
+        channel.shutdown();
+    }
+
+    private void doUnaryCall(ManagedChannel channel) {
         System.out.println("Creating a stub...");
 
         SumServiceGrpc.SumServiceBlockingStub sumClient = SumServiceGrpc.newBlockingStub(channel);
@@ -35,6 +53,12 @@ public class CalculatorClient {
         SumResponse sumResponse = sumClient.sum(sumRequest);
         System.out.println("The result of the sum of " + firstValue + " to "
                 + secondValue + " is " + sumResponse.getResult());
+    }
+
+    private void doServerStreamingCall(ManagedChannel channel) {
+        System.out.println("Creating a stub...");
+
+        SumServiceGrpc.SumServiceBlockingStub sumClient = SumServiceGrpc.newBlockingStub(channel);
 
         // Server Streaming
         System.out.println("Server streaming request...");
@@ -45,8 +69,57 @@ public class CalculatorClient {
         sumClient.primeNumberDecomposition(primeRequest).forEachRemaining(response -> {
             System.out.println("Prime number: " + response.getResult());
         });
+    }
 
-        System.out.println("Shutting down channel...");
-        channel.shutdown();
+    private void doClientStreamingCall(ManagedChannel channel) {
+        SumServiceGrpc.SumServiceStub asyncClient = SumServiceGrpc.newStub(channel);
+
+        CountDownLatch latch = new CountDownLatch(1);
+
+        StreamObserver<AverageRequest> requestObserver = asyncClient.calculateAverage(new StreamObserver<AverageResponse>() {
+            @Override
+            public void onNext(AverageResponse value) {
+                System.out.println("Received a response from the server");
+                System.out.println("Average: " + value.getAverage());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Server has completed sending us something!");
+            }
+        });
+
+        System.out.println("Sending message 1");
+        requestObserver.onNext(AverageRequest.newBuilder()
+                .setNumber(1)
+                .build());
+
+        System.out.println("Sending message 2");
+        requestObserver.onNext(AverageRequest.newBuilder()
+                .setNumber(2)
+                .build());
+
+        System.out.println("Sending message 3");
+        requestObserver.onNext(AverageRequest.newBuilder()
+                .setNumber(3)
+                .build());
+
+        System.out.println("Sending message 4");
+        requestObserver.onNext(AverageRequest.newBuilder()
+                .setNumber(4)
+                .build());
+
+        requestObserver.onCompleted();
+
+        try {
+            latch.await(4L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

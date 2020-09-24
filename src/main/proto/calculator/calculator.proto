@@ -26,9 +26,21 @@ message PrimeResponse {
   int32 result = 1;
 }
 
+message AverageRequest {
+  int32 number = 1;
+}
+
+message AverageResponse {
+  double average = 1;
+}
+
 service SumService {
   // Unary
   rpc Sum(SumRequest) returns (SumResponse) {};
 
+  // Server streaming
   rpc PrimeNumberDecomposition(PrimeRequest) returns (stream PrimeResponse) {};
+
+  // Client streaming
+  rpc CalculateAverage(stream AverageRequest) returns (AverageResponse) {};
 }
