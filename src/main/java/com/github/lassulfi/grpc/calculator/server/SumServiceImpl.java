@@ -78,4 +78,38 @@ public class SumServiceImpl extends SumServiceGrpc.SumServiceImplBase {
 
         return requestObserver;
     }
+
+    @Override
+    public StreamObserver<FindMaximumRequest> findMaximum(StreamObserver<FindMaximumResponse> responseObserver) {
+        StreamObserver<FindMaximumRequest> requestObserver = new StreamObserver<FindMaximumRequest>() {
+            int max = Integer.MIN_VALUE;
+            @Override
+            public void onNext(FindMaximumRequest value) {
+                int number = value.getNumber();
+                if (number > max) {
+                    max = number;
+                    FindMaximumResponse findMaximumResponse = FindMaximumResponse.newBuilder()
+                            .setMaximum(max)
+                            .build();
+                    responseObserver.onNext(findMaximumResponse);
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                responseObserver.onCompleted();
+            }
+
+            @Override
+            public void onCompleted() {
+                FindMaximumResponse findMaximumResponse = FindMaximumResponse.newBuilder()
+                        .setMaximum(max)
+                        .build();
+                responseObserver.onNext(findMaximumResponse);
+                responseObserver.onCompleted();
+            }
+        };
+
+        return requestObserver;
+    }
 }
