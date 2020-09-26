@@ -27,7 +27,8 @@ public class CalculatorClient {
 //        doUnaryCall(channel);
 //        doServerStreamingCall(channel);
 //        doClientStreamingCall(channel);
-        doBiDiStreamingCall(channel);
+//        doBiDiStreamingCall(channel);
+        doUnaryErrorCall(channel);
 
         System.out.println("Shutting down channel...");
         channel.shutdown();
@@ -154,6 +155,21 @@ public class CalculatorClient {
             latch.await(3L, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void doUnaryErrorCall(ManagedChannel channel) {
+        SumServiceGrpc.SumServiceBlockingStub blockingStub = SumServiceGrpc.newBlockingStub(channel);
+
+        int number = -1;
+
+        try {
+            blockingStub.squareRoot(SquareRootRequest.newBuilder()
+                    .setNumber(number)
+                    .build());
+        } catch (RuntimeException rex) {
+            System.out.println("Got an exception for square root!");
+            rex.printStackTrace();
         }
     }
 }

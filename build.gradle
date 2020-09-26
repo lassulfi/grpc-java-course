@@ -28,9 +28,10 @@ protobuf {
 }
 
 dependencies {
-    implementation 'io.grpc:grpc-netty-shaded:1.24.0'
+    implementation 'io.grpc:grpc-netty-shaded:1.24.0' // includes ssl libraries
     implementation 'io.grpc:grpc-protobuf:1.24.0'
     implementation 'io.grpc:grpc-stub:1.24.0'
+    implementation "io.grpc:grpc-services:1.24.0" // reflection
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }

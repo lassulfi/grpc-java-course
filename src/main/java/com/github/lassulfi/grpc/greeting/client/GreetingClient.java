@@ -2,33 +2,45 @@ package com.github.lassulfi.grpc.greeting.client;
 
 import com.proto.dummy.DummyServiceGrpc;
 import com.proto.greet.*;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.*;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import javax.net.ssl.SSLException;
+import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class GreetingClient {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SSLException {
         System.out.println("Hello, I'm a gRPC client!");
 
         GreetingClient main = new GreetingClient();
         main.run();
     }
 
-    private void run() {
+    private void run() throws SSLException {
         ManagedChannel channel = ManagedChannelBuilder
                 .forAddress("localhost", 50051)
                 .usePlaintext()
                 .build();
 
+        // With server authentication SSL/TLS; custom CA root certificates; not on Android
+        ManagedChannel secureChannel = NettyChannelBuilder.forAddress("localhost", 50051)
+                .sslContext(GrpcSslContexts.forClient()
+                        .trustManager(new File("ssl/ca.crt"))
+                        .build())
+                .build();
+
 //        doUnaryCall(channel);
 //        doServerStreamingCall(channel);
 //        doClientStreamingCall(channel);
-        doBiDiStreamingCall(channel);
+//        doBiDiStreamingCall(channel);
+//        doUnaryCallWithDeadline(channel);
+        doUnaryCall(secureChannel);
 
         System.out.println("Shutting down channel");
         channel.shutdown();
@@ -189,6 +201,47 @@ public class GreetingClient {
             latch.await(3L, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void doUnaryCallWithDeadline(ManagedChannel channel) {
+        GreetServiceGrpc.GreetServiceBlockingStub blockingStub = GreetServiceGrpc.newBlockingStub(channel);
+
+        Greeting greeting = Greeting.newBuilder()
+                .setFirstName("Luis Daniel")
+                .setLastName("Assulfi")
+                .build();
+
+        //first call with 3000 ms deadline
+        try {
+            System.out.println("Sending a request with a deadline of 3000 ms");
+            GreetWithDeadlineResponse response = blockingStub.withDeadline(Deadline.after(3000, TimeUnit.MILLISECONDS))
+                    .greetWithDeadline(GreetWithDeadlineRequest.newBuilder()
+                            .setGreeting(greeting)
+                            .build());
+            System.out.println(response.getResult());
+        } catch (StatusRuntimeException sre) {
+            if (sre.getStatus() == Status.DEADLINE_EXCEEDED) {
+                System.out.println("Deadline exceeded, we don't want the response");
+            } else {
+                sre.printStackTrace();
+            }
+        }
+
+        //first call with 100 ms deadline
+        try {
+            System.out.println("Sending a request with a deadline of 100 ms");
+            GreetWithDeadlineResponse response = blockingStub.withDeadline(Deadline.after(100, TimeUnit.MILLISECONDS))
+                    .greetWithDeadline(GreetWithDeadlineRequest.newBuilder()
+                            .setGreeting(greeting)
+                            .build());
+            System.out.println(response.getResult());
+        } catch (StatusRuntimeException sre) {
+            if (sre.getStatus() == Status.DEADLINE_EXCEEDED) {
+                System.out.println("Deadline exceeded, we don't want the response");
+            } else {
+                sre.printStackTrace();
+            }
         }
     }
 }

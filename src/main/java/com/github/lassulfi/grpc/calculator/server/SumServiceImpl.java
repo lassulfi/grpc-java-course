@@ -1,6 +1,7 @@
 package com.github.lassulfi.grpc.calculator.server;
 
 import com.proto.calculator.*;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 public class SumServiceImpl extends SumServiceGrpc.SumServiceImplBase {
@@ -111,5 +112,25 @@ public class SumServiceImpl extends SumServiceGrpc.SumServiceImplBase {
         };
 
         return requestObserver;
+    }
+
+    @Override
+    public void squareRoot(SquareRootRequest request, StreamObserver<SquareRootResponse> responseObserver) {
+        Integer number = request.getNumber();
+        if (number >= 0) {
+            double result = Math.sqrt(number);
+            responseObserver.onNext(SquareRootResponse.newBuilder()
+                    .setResult(result)
+                    .build());
+            responseObserver.onCompleted();
+        } else {
+            //we contruct the error message
+            responseObserver.onError(
+                    Status.INVALID_ARGUMENT
+                            .withDescription("The request number value must be positive")
+                            .augmentDescription("Request number: " + number)
+                            .asRuntimeException()
+            );
+        }
     }
 }
