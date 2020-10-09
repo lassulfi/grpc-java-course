@@ -62,5 +62,23 @@ public class BlogClient {
 
         System.out.println("Updated blog...");
         System.out.println(updateBlogResponse.toString());
+
+        System.out.println("Deleting blog...");
+        DeleteBlogResponse deleteBlogResponse = blogClient.deleteBlog(DeleteBlogRequest.newBuilder()
+                .setBlogId(blogId)
+                .build());
+
+        System.out.println("Deleted blog!");
+
+        // this one should return not found
+//        ReadBlogResponse readBlogResponseAfterDeletion = blogClient.readBlog(ReadBlogRequest
+//                .newBuilder()
+//                .setBlogId(blogId)
+//                .build());
+
+        System.out.println("List the blogs in our database");
+        blogClient.listBlog(ListBlogRequest.newBuilder().build())
+                .forEachRemaining(listBlogResponse ->
+                        System.out.println(listBlogResponse.getBlog().toString()));
     }
 }
